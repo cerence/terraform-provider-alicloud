@@ -571,6 +571,19 @@ func resourceAlicloudCSKubernetes() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"service_account_issuer": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"api_audiences": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -1062,6 +1075,11 @@ func buildKubernetesArgs(d *schema.ResourceData, meta interface{}) (*cs.Delicate
 		}
 	}
 
+	var apiAudiences string
+	if list := expandStringList(d.Get("api_audiences").([]interface{})); len(list) > 0 {
+		apiAudiences = strings.Join(list, ",")
+	}
+
 	creationArgs := &cs.DelicatedKubernetesClusterCreationRequest{
 		ClusterArgs: cs.ClusterArgs{
 			DisableRollback: true,
@@ -1083,6 +1101,8 @@ func buildKubernetesArgs(d *schema.ResourceData, meta interface{}) (*cs.Delicate
 			SnatEntry:            d.Get("new_nat_gateway").(bool),
 			NodeNameMode:         d.Get("node_name_mode").(string),
 			Addons:               addons,
+			ServiceAccountIssuer: d.Get("service_account_issuer").(string),
+			ApiAudiences:         apiAudiences,
 		},
 	}
 
